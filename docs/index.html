@@ -63,7 +63,10 @@
 
   <div class="install-box">
     <h2>Quick Install</h2>
-    <code id="install-cmd">curl -fsSL https://lyuwenfu.me/jless/install | bash</code>
+    <div style="position: relative;">
+      <code id="install-cmd">curl -fsSL https://lyuwenfu.me/jless/install | bash</code>
+      <button id="copy-btn" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); padding: 0.4rem 0.8rem; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-family: inherit;">Copy</button>
+    </div>
   </div>
 
   <div class="downloads">
@@ -79,6 +82,21 @@
       { name: 'Linux x86_64', target: 'x86_64-unknown-linux-gnu' },
       { name: 'macOS x86_64', target: 'x86_64-apple-darwin' },
     ];
+
+    // Copy button functionality
+    document.getElementById('copy-btn').addEventListener('click', function() {
+      const cmd = document.getElementById('install-cmd').textContent;
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.background = '#28a745';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#0066cc';
+        }, 2000);
+      });
+    });
 
     function detectPlatform() {
       const ua = navigator.userAgent.toLowerCase();
