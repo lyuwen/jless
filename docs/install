@@ -1,0 +1,88 @@
+#!/bin/bash
+set -euo pipefail
+
+REPO="lyuwen/jless"
+INSTALL_DIR="${JLESS_INSTALL_DIR:-$HOME/.local/bin}"
+
+info() { printf '\033[0;34m%s\033[0m\n' "$*"; }
+error() { printf '\033[0;31merror: %s\033[0m\n' "$*" >&2; exit 1; }
+
+detect_target() {
+  local os arch
+  os="$(uname -s)"
+  arch="$(uname -m)"
+
+  case "$os" in
+    Linux)  os="unknown-linux-gnu" ;;
+    Darwin) os="apple-darwin" ;;
+    *)      error "Unsupported OS: $os" ;;
+  esac
+
+  case "$arch" in
+    x86_64|amd64)  arch="x86_64" ;;
+    aarch64|arm64) arch="aarch64" ;;
+    *)             error "Unsupported architecture: $arch" ;;
+  esac
+
+  echo "${arch}-${os}"
+}
+
+detect_variant() {
+  if [ "$(uname -s)" = "Darwin" ]; then
+    echo ""
+    return
+  fi
+
+  if [ -n "${SSH_CONNECTION:-}" ] || [ -n "${SSH_TTY:-}" ]; then
+    echo "-no-clipboard"
+    return
+  fi
+
+  if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+    echo "-no-clipboard"
+    return
+  fi
+
+  echo ""
+}
+
+main() {
+  local target variant asset_name url tmpdir
+
+  target="$(detect_target)"
+  variant="$(detect_variant)"
+  asset_name="jless${variant}-${target}.zip"
+
+  info "Detected target: ${target}"
+  if [ -n "$variant" ]; then
+    info "Headless environment detected, installing no-clipboard build"
+  else
+    info "Desktop environment detected, installing clipboard build"
+  fi
+
+  url="https://github.com/${REPO}/releases/latest/download/${asset_name}"
+
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+
+  info "Downloading ${asset_name}..."
+  if ! curl -fsSL -o "${tmpdir}/${asset_name}" "$url"; then
+    error "Failed to download ${url}"
+  fi
+
+  info "Extracting..."
+  unzip -qo "${tmpdir}/${asset_name}" -d "$tmpdir"
+
+  mkdir -p "$INSTALL_DIR"
+  mv "${tmpdir}/jless" "${INSTALL_DIR}/jless"
+  chmod +x "${INSTALL_DIR}/jless"
+
+  info "Installed jless to ${INSTALL_DIR}/jless"
+
+  if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
+    info "Note: ${INSTALL_DIR} is not in your PATH. Add it with:"
+    info "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+  fi
+}
+
+main

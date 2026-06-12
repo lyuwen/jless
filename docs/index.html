@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jless - JSON viewer for the terminal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    h1 { margin-bottom: 0.5rem; font-size: 2.5rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; }
+    .install-box {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      border-left: 4px solid #0066cc;
+    }
+    .install-box h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+    code {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      display: block;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+    }
+    .downloads { margin-top: 2rem; }
+    .downloads h2 { margin-bottom: 1rem; }
+    .download-links {
+      display: grid;
+      gap: 0.5rem;
+    }
+    .download-link {
+      padding: 0.75rem 1rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-decoration: none;
+      color: #0066cc;
+      transition: all 0.2s;
+      display: block;
+    }
+    .download-link:hover {
+      background: #f0f7ff;
+      border-color: #0066cc;
+    }
+    .variant { color: #666; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>jless</h1>
+  <p class="subtitle">A command-line JSON viewer</p>
+
+  <div class="install-box">
+    <h2>Quick Install</h2>
+    <code id="install-cmd">curl -fsSL https://lyuwenfu.me/jless/install | bash</code>
+  </div>
+
+  <div class="downloads">
+    <h2>Direct Downloads</h2>
+    <div class="download-links" id="download-links"></div>
+  </div>
+
+  <script>
+    const REPO = 'lyuwen/jless';
+    const VERSION = 'latest';
+
+    const targets = [
+      { name: 'Linux x86_64', target: 'x86_64-unknown-linux-gnu' },
+      { name: 'macOS x86_64', target: 'x86_64-apple-darwin' },
+    ];
+
+    function detectPlatform() {
+      const ua = navigator.userAgent.toLowerCase();
+      const platform = navigator.platform.toLowerCase();
+
+      if (platform.includes('mac') || ua.includes('mac')) {
+        return 'x86_64-apple-darwin';
+      }
+      if (platform.includes('linux') || ua.includes('linux')) {
+        return 'x86_64-unknown-linux-gnu';
+      }
+      return null;
+    }
+
+    function renderDownloads() {
+      const container = document.getElementById('download-links');
+      const detectedTarget = detectPlatform();
+
+      targets.forEach(({ name, target }) => {
+        const isDetected = target === detectedTarget;
+        const variants = target.includes('linux')
+          ? ['', '-no-clipboard']
+          : [''];
+
+        variants.forEach(variant => {
+          const fileName = `jless${variant}-${target}.zip`;
+          const url = `https://github.com/${REPO}/releases/${VERSION}/download/${fileName}`;
+          const variantLabel = variant ? ' (no clipboard)' : ' (with clipboard)';
+          const label = target.includes('linux') ? `${name}${variantLabel}` : name;
+
+          const link = document.createElement('a');
+          link.href = url;
+          link.className = 'download-link';
+          link.innerHTML = `
+            ${isDetected && !variant ? '→ ' : ''}${label}
+            <span class="variant">${fileName}</span>
+          `;
+          container.appendChild(link);
+        });
+      });
+    }
+
+    renderDownloads();
+  </script>
+</body>
+</html>
