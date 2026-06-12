@@ -881,14 +881,9 @@ impl App {
                     _ => unreachable!(),
                 };
 
-                match self
-                    .viewer
+                self.viewer
                     .flatjson
-                    .build_path_to_node(path_type, focused_row_index)
-                {
-                    Ok(path) => path,
-                    Err(err) => return Err(err),
-                }
+                    .build_path_to_node(path_type, focused_row_index)?
             }
         };
 
