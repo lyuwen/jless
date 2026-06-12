@@ -1,8 +1,10 @@
+#[cfg(feature = "clipboard")]
 use std::error::Error;
 use std::fs::File;
 use std::io;
 use std::io::Write;
 
+#[cfg(feature = "clipboard")]
 use clipboard::{ClipboardContext, ClipboardProvider};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -31,6 +33,7 @@ pub struct App {
     input_filename: String,
     search_state: SearchState,
     message: Option<(String, MessageSeverity)>,
+    #[cfg(feature = "clipboard")]
     clipboard_context: Result<ClipboardContext, Box<dyn Error>>,
 }
 
@@ -47,6 +50,7 @@ pub struct App {
 enum InputState {
     Default,
     PendingPCommand,
+    #[cfg(feature = "clipboard")]
     PendingYCommand,
     PendingZCommand,
     WaitingForAnyKeyPress,
@@ -137,6 +141,7 @@ impl App {
             input_filename,
             search_state: SearchState::empty(),
             message: None,
+            #[cfg(feature = "clipboard")]
             clipboard_context: ClipboardProvider::new(),
         })
     }
@@ -255,6 +260,7 @@ impl App {
                     None
                 }
                 // y commands:
+                #[cfg(feature = "clipboard")]
                 event if self.input_state == InputState::PendingYCommand => {
                     let content_target = match event {
                         KeyEvent(Key::Char('y')) => Some(ContentTarget::PrettyPrintedValue),
@@ -318,6 +324,7 @@ impl App {
                     None
                 }
                 KeyEvent(Key::Char('y')) => {
+                    #[cfg(feature = "clipboard")]
                     match &self.clipboard_context {
                         Ok(_) => {
                             self.input_state = InputState::PendingYCommand;
@@ -329,6 +336,10 @@ impl App {
                             self.set_error_message(msg);
                         }
                     }
+                    #[cfg(not(feature = "clipboard"))]
+                    self.set_error_message(
+                        "Clipboard support is not enabled in this build".to_string(),
+                    );
 
                     None
                 }
@@ -884,6 +895,7 @@ impl App {
         Ok(data)
     }
 
+    #[cfg(feature = "clipboard")]
     fn copy_content(&mut self, content_target: ContentTarget) {
         match self.get_content_target_data(content_target) {
             Ok(content) => {
