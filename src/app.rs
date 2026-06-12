@@ -881,8 +881,7 @@ impl App {
                     _ => unreachable!(),
                 };
 
-                self
-                    .viewer
+                self.viewer
                     .flatjson
                     .build_path_to_node(path_type, focused_row_index)?
             }
